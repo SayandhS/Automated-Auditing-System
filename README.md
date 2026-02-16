@@ -1,1 +1,1 @@
-# Automated-Audting-System
+# Automated-Auditing-System
