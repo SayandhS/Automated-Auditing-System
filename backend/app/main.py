@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import health, auth
+from app.api.routes import health, auth, transactions, quotations
 
 app = FastAPI(
     title="FastAPI Modular Monolith",
@@ -20,6 +20,8 @@ app.add_middleware(
 
 app.include_router(health.router, tags=["health"])
 app.include_router(auth.router, tags=["auth"])
+app.include_router(transactions.router, tags=["transactions"])
+app.include_router(quotations.router, tags=["quotations"])
 
 
 @app.get("/")

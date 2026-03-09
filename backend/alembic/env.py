@@ -12,6 +12,9 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app.core.config import settings
 from app.core.database import Base
 from app.models.user import User  # noqa: F401 - register models for autogenerate
+from app.models.procurement_transaction import ProcurementTransaction  # noqa: F401
+from app.models.audit_log import AuditLog  # noqa: F401
+from app.models.vendor_quotation import VendorQuotation  # noqa: F401
 
 config = context.config
 

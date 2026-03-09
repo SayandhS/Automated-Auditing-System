@@ -6,7 +6,7 @@ export function TopNav() {
 
   const handleLogout = () => {
     logout()
-    navigate('/login')
+    navigate('/')
   }
 
   return (

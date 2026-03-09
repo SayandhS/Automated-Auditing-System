@@ -1,24 +1,31 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
-import { login, isAuthenticated, getDashboardPathForRole } from '@/services/auth'
+import { useNavigate, useParams } from 'react-router-dom'
+import { login, isAuthenticated, getDashboardPathForRole, removeToken } from '@/services/auth'
+import { URL_ROLE_TO_BACKEND, URL_ROLE_TO_LABEL } from '@/types/auth'
+
+const VALID_ROLES = ['buyer', 'finance', 'inventory', 'admin']
 
 export function Login() {
+  const { role: urlRole } = useParams<{ role: string }>()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const navigate = useNavigate()
-  const location = useLocation()
 
-  const from = (location.state as { from?: { pathname: string } })?.from?.pathname
+  const expectedBackendRole = urlRole ? URL_ROLE_TO_BACKEND[urlRole.toLowerCase()] : null
+  const title = urlRole && URL_ROLE_TO_LABEL[urlRole.toLowerCase()]
+    ? `${URL_ROLE_TO_LABEL[urlRole.toLowerCase()]} Login`
+    : 'Login'
 
   useEffect(() => {
-    if (isAuthenticated()) {
-      const role = localStorage.getItem('role')
-      const target = from ?? (role ? getDashboardPathForRole(role) : '/buyer')
-      navigate(target, { replace: true })
+    if (isAuthenticated() && expectedBackendRole) {
+      const storedRole = localStorage.getItem('role')
+      if (storedRole === expectedBackendRole) {
+        navigate(getDashboardPathForRole(expectedBackendRole), { replace: true })
+      }
     }
-  }, [from, navigate])
+  }, [expectedBackendRole, navigate])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -26,8 +33,13 @@ export function Login() {
     setLoading(true)
     try {
       const { user } = await login({ username, password })
-      const target = from ?? getDashboardPathForRole(user.role)
-      navigate(target, { replace: true })
+      const backendRole = user.role
+      if (expectedBackendRole && backendRole !== expectedBackendRole) {
+        removeToken()
+        setError('Invalid credentials for selected role.')
+        return
+      }
+      navigate(getDashboardPathForRole(backendRole), { replace: true })
     } catch (err: unknown) {
       const msg =
         err && typeof err === 'object' && 'response' in err
@@ -39,6 +51,22 @@ export function Login() {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (urlRole && !VALID_ROLES.includes(urlRole.toLowerCase())) {
+    return (
+      <div
+        style={{
+          minHeight: '100vh',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: '#f5f5f7',
+        }}
+      >
+        <p style={{ color: '#64748b' }}>Invalid role. Use /login/buyer, /login/finance, /login/inventory, or /login/admin.</p>
+      </div>
+    )
   }
 
   return (
@@ -61,7 +89,7 @@ export function Login() {
           boxShadow: '0 4px 24px rgba(0,0,0,0.08)',
         }}
       >
-        <h1 style={{ marginBottom: '1.5rem', fontSize: '1.5rem' }}>Login</h1>
+        <h1 style={{ marginBottom: '1.5rem', fontSize: '1.5rem' }}>{title}</h1>
         {error && (
           <div
             style={{

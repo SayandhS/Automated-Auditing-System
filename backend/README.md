@@ -48,3 +48,18 @@ Creates initial users: admin, buyer1, finance1, inventory1 (passwords: admin123,
 ```bash
 python -m app.scripts.seed_users
 ```
+
+## Procurement Transactions
+
+**Endpoints:**
+- `POST /transactions` – BUYER only. Creates new transaction (status=CREATED) and audit log.
+- `GET /transactions` – BUYER sees own, ADMIN sees all.
+- `GET /transactions/{id}` – Role-restricted (owner or ADMIN).
+- `GET /transactions/{id}/audit-logs` – Audit logs for verification.
+
+**Testing via Swagger:**
+1. Login as buyer1 at `/auth/login`.
+2. Authorize with the returned token.
+3. `POST /transactions` with body `{"title": "Test purchase"}`.
+4. Verify response: `status: "CREATED"`.
+5. `GET /transactions/{id}/audit-logs` to confirm audit entry exists.
