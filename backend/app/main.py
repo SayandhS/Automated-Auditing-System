@@ -1,7 +1,15 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.routes import health, auth, transactions, quotations
+from app.api.routes import (
+  health,
+  auth,
+  transactions,
+  quotations,
+  purchase_orders,
+  reconciliation,
+  finance_decisions,
+)
 
 app = FastAPI(
     title="FastAPI Modular Monolith",
@@ -22,6 +30,9 @@ app.include_router(health.router, tags=["health"])
 app.include_router(auth.router, tags=["auth"])
 app.include_router(transactions.router, tags=["transactions"])
 app.include_router(quotations.router, tags=["quotations"])
+app.include_router(purchase_orders.router, tags=["purchase_orders"])
+app.include_router(reconciliation.router, tags=["reconciliation"])
+app.include_router(finance_decisions.router, tags=["finance_decisions"])
 
 
 @app.get("/")

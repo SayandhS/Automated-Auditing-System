@@ -12,6 +12,8 @@ from app.core.database import Base
 class TransactionStatus(str, enum.Enum):
     CREATED = "CREATED"
     VENDOR_SELECTED = "VENDOR_SELECTED"
+    PO_AUTO_APPROVED = "PO_AUTO_APPROVED"
+    PO_REVIEW = "PO_REVIEW"
     PO_APPROVED = "PO_APPROVED"
     PO_REJECTED = "PO_REJECTED"
     PAYMENT_REVIEW = "PAYMENT_REVIEW"
@@ -36,3 +38,7 @@ class ProcurementTransaction(Base):
         back_populates="transaction",
         cascade="all, delete-orphan",
     )
+    # One-to-many: invoices and GRNs
+    invoices = relationship("Invoice", backref="transaction", cascade="all, delete-orphan")
+    grns = relationship("GRN", backref="transaction", cascade="all, delete-orphan")
+    inventory_records = relationship("InventoryRecord", backref="transaction", cascade="all, delete-orphan")
