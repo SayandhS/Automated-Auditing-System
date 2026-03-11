@@ -10,6 +10,7 @@ from app.api.routes import (
   reconciliation,
   finance_decisions,
   admin_users,
+  ocr_upload,
 )
 
 app = FastAPI(
@@ -35,6 +36,7 @@ app.include_router(purchase_orders.router, tags=["purchase_orders"])
 app.include_router(reconciliation.router, tags=["reconciliation"])
 app.include_router(finance_decisions.router, tags=["finance_decisions"])
 app.include_router(admin_users.router, tags=["admin"])
+app.include_router(ocr_upload.router, tags=["ocr_upload"])
 
 
 @app.get("/")

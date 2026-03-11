@@ -11,12 +11,15 @@ class Settings(BaseSettings):
     )
 
     # Database
-    DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/fastapi_db"
+    DATABASE_URL: str = "postgresql://postgres:password12@localhost:5432/audit_db"
 
     # JWT
     JWT_SECRET_KEY: str = "your-secret-key-change-in-production"
     JWT_ALGORITHM: str = "HS256"
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+
+    # OCR Microservice
+    OCR_SERVICE_URL: str = "http://localhost:8001"
 
 
 settings = Settings()

@@ -7,6 +7,7 @@ from app.api.routes import (
   reconciliation,
   finance_decisions,
   admin_users,
+  ocr_upload,
 )
 
 __all__ = [
@@ -18,4 +19,5 @@ __all__ = [
   "reconciliation",
   "finance_decisions",
   "admin_users",
+  "ocr_upload",
 ]

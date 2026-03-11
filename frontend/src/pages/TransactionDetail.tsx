@@ -13,6 +13,7 @@ import type { AuditLogEntry, Transaction, VendorQuotation, VendorEvaluation } fr
 import { StatusBadge } from '@/components/StatusBadge'
 import { AddQuotationModal } from '@/components/AddQuotationModal'
 import { ConfirmModal } from '@/components/ConfirmModal'
+import { DocumentUpload } from '@/components/DocumentUpload'
 import { ROLES } from '@/types/roles'
 
 export function TransactionDetail() {
@@ -188,6 +189,21 @@ export function TransactionDetail() {
           <span style={{ fontSize: '0.875rem' }}>{formatDate(transaction.created_at)}</span>
         </div>
       </div>
+
+      {/* Document Upload (OCR) */}
+      {isBuyer && transaction && (
+        <DocumentUpload
+          transactionId={transaction.id}
+          onSaved={async () => {
+            await loadQuotations()
+            await loadEvaluation()
+            if (id) {
+              const logs = await getTransactionAuditLogs(id)
+              setAuditLogs(logs)
+            }
+          }}
+        />
+      )}
 
       <h2 style={{ marginBottom: '0.75rem', fontSize: '1.125rem' }}>Vendor Comparison</h2>
       {vendorEvaluation?.type === 'SINGLE_VENDOR' && (

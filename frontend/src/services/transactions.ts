@@ -57,3 +57,48 @@ export async function getVendorEvaluation(transactionId: string): Promise<Vendor
     return null
   }
 }
+
+// ---------------------------------------------------------------------------
+// OCR Upload
+// ---------------------------------------------------------------------------
+
+import type { OcrExtractionResponse, OcrInvoiceData, OcrQuotationData, OcrGrnData, DocType } from '@/types/ocr'
+
+export async function uploadDocumentForOcr(
+  transactionId: string,
+  file: File,
+  docType: DocType
+): Promise<OcrExtractionResponse> {
+  const formData = new FormData()
+  formData.append('file', file)
+  const { data } = await api.post<OcrExtractionResponse>(
+    `/transactions/${transactionId}/upload/${docType}`,
+    formData,
+    { headers: { 'Content-Type': 'multipart/form-data' } }
+  )
+  return data
+}
+
+export async function saveOcrInvoice(
+  transactionId: string,
+  payload: OcrInvoiceData
+): Promise<{ message: string; invoice_id: string; item_count: number }> {
+  const { data } = await api.post(`/transactions/${transactionId}/upload/invoice/save`, payload)
+  return data
+}
+
+export async function saveOcrQuotation(
+  transactionId: string,
+  payload: OcrQuotationData
+): Promise<{ message: string; quotation_id: string; item_count: number }> {
+  const { data } = await api.post(`/transactions/${transactionId}/upload/quotation/save`, payload)
+  return data
+}
+
+export async function saveOcrGrn(
+  transactionId: string,
+  payload: OcrGrnData
+): Promise<{ message: string; grn_id: string; item_count: number }> {
+  const { data } = await api.post(`/transactions/${transactionId}/upload/grn/save`, payload)
+  return data
+}
