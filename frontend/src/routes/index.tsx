@@ -8,6 +8,7 @@ import { FinanceDashboard } from '@/pages/FinanceDashboard'
 import { InventoryDashboard } from '@/pages/InventoryDashboard'
 import { AdminDashboard } from '@/pages/AdminDashboard'
 import { TransactionDetail } from '@/pages/TransactionDetail'
+import { AdminUsers } from '@/pages/AdminUsers'
 import { ROLES } from '@/types/roles'
 
 export function AppRoutes() {
@@ -40,6 +41,11 @@ export function AppRoutes() {
         <Route path="admin" element={
           <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
             <AdminDashboard />
+          </ProtectedRoute>
+        } />
+        <Route path="admin/users" element={
+          <ProtectedRoute allowedRoles={[ROLES.ADMIN]}>
+            <AdminUsers />
           </ProtectedRoute>
         } />
         <Route path="transactions/:id" element={<TransactionDetail />} />

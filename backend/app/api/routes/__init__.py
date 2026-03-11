@@ -6,6 +6,7 @@ from app.api.routes import (
   purchase_orders,
   reconciliation,
   finance_decisions,
+  admin_users,
 )
 
 __all__ = [
@@ -16,4 +17,5 @@ __all__ = [
   "purchase_orders",
   "reconciliation",
   "finance_decisions",
+  "admin_users",
 ]

@@ -9,6 +9,7 @@ from app.api.routes import (
   purchase_orders,
   reconciliation,
   finance_decisions,
+  admin_users,
 )
 
 app = FastAPI(
@@ -33,6 +34,7 @@ app.include_router(quotations.router, tags=["quotations"])
 app.include_router(purchase_orders.router, tags=["purchase_orders"])
 app.include_router(reconciliation.router, tags=["reconciliation"])
 app.include_router(finance_decisions.router, tags=["finance_decisions"])
+app.include_router(admin_users.router, tags=["admin"])
 
 
 @app.get("/")

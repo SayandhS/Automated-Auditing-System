@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
 import { getRole } from '@/services/auth'
 import { ROLE_DASHBOARD_PATH } from '@/types/auth'
+import { ROLES } from '@/types/roles'
 
 const roleLabels: Record<string, string> = {
   BUYER: 'Buyer',
@@ -14,7 +15,10 @@ export function Sidebar() {
   const role = getRole()
 
   const navItems = role
-    ? [{ path: ROLE_DASHBOARD_PATH[role] ?? '/buyer', label: `${roleLabels[role] ?? role} Dashboard` }]
+    ? [
+        { path: ROLE_DASHBOARD_PATH[role] ?? '/buyer', label: `${roleLabels[role] ?? role} Dashboard` },
+        ...(role === ROLES.ADMIN ? [{ path: '/admin/users', label: 'User Management' }] : []),
+      ]
     : []
 
   return (
@@ -28,7 +32,7 @@ export function Sidebar() {
     >
       <nav style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
         {navItems.map((item) => {
-          const isActive = location.pathname === item.path
+          const isActive = location.pathname === item.path || location.pathname.startsWith(item.path + '/')
           return (
             <Link
               key={item.path}
