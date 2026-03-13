@@ -1,3 +1,5 @@
+### LightOnOCR  only code for testing
+
 import torch
 from transformers import LightOnOcrForConditionalGeneration, LightOnOcrProcessor
 from PIL import Image

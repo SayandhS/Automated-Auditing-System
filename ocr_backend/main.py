@@ -70,8 +70,10 @@ async def health():
 
 @app.post("/ocr/extract")
 async def extract_document(
-    file: UploadFile = File(..., description="Scanned document image (JPEG, PNG, etc.)"),
+    file: UploadFile = File(..., description="Scanned document image"),
     doc_type: DocType = Query(..., description="Type of document being scanned"),
+    engine: str = Query("LOCAL", description="OCR engine to use"),
+    api_key: str | None = Query(None, description="API key for external OCR"),
 ):
     """Extract structured data from a scanned document image.
 
@@ -114,33 +116,45 @@ async def extract_document(
         raise HTTPException(status_code=400, detail=f"Could not open image: {exc}")
 
     # Step 1: OCR
-    from ocr_engine import engine
     try:
-        raw_text = engine.extract_text(image)
-        print(f"[REQUEST] Step 1/2 complete — OCR text extracted")
+        if engine.upper() == "API":
+            from ocr_api import extract_text_api
+            structured = extract_text_api(image_bytes, doc_type.value, api_key)
+            return {
+                "doc_type": doc_type.value,
+                "mock": False,
+                "data": structured,
+            }
+        else:
+            from ocr_engine import engine as local_engine
+            print("[OCR] Using Local OCR engine")
+            raw_text = local_engine.extract_text(image)
+
+            print(f"[REQUEST] Step 1/2 complete — OCR text extracted")
+
+            # Step 2: LLM structuring
+            from llm_structurer import structure_text
+            try:
+                structured = structure_text(raw_text, doc_type.value, ollama_model=OLLAMA_MODEL)
+                print(f"[REQUEST] Step 2/2 complete — Data structured")
+            except Exception as exc:
+                logger.exception("LLM structuring failed")
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"LLM structuring failed: {exc}. Raw OCR text: {raw_text[:500]}",
+                )
+
+            total_elapsed = time.time() - total_start
+            print(f"[REQUEST] ✓ Done in {total_elapsed:.1f}s total")
+            print(f"{'='*60}\n")
+
+            return {
+                "doc_type": doc_type.value,
+                "mock": False,
+                "raw_text": raw_text,
+                "data": structured,
+            }
+    
     except Exception as exc:
         logger.exception("OCR extraction failed")
         raise HTTPException(status_code=500, detail=f"OCR extraction failed: {exc}")
-
-    # Step 2: LLM structuring
-    from llm_structurer import structure_text
-    try:
-        structured = structure_text(raw_text, doc_type.value, ollama_model=OLLAMA_MODEL)
-        print(f"[REQUEST] Step 2/2 complete — Data structured")
-    except Exception as exc:
-        logger.exception("LLM structuring failed")
-        raise HTTPException(
-            status_code=500,
-            detail=f"LLM structuring failed: {exc}. Raw OCR text: {raw_text[:500]}",
-        )
-
-    total_elapsed = time.time() - total_start
-    print(f"[REQUEST] ✓ Done in {total_elapsed:.1f}s total")
-    print(f"{'='*60}\n")
-
-    return {
-        "doc_type": doc_type.value,
-        "mock": False,
-        "raw_text": raw_text,
-        "data": structured,
-    }

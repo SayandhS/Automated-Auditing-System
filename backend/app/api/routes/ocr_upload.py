@@ -10,7 +10,7 @@ This two-step flow lets the user review extracted data before saving.
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status, Form
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -67,6 +67,8 @@ def upload_and_extract(
     transaction_id: UUID,
     doc_type: str,
     file: UploadFile = File(..., description="Scanned document image"),
+    ocr_engine: str = Form("LOCAL"),
+    api_key: str | None = Form(None),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
@@ -90,9 +92,15 @@ def upload_and_extract(
 
     file_bytes = file.file.read()
     filename = file.filename or "document.jpg"
-
+    print("OCR ENGINE RECEIVED:", ocr_engine)
     try:
-        result = call_ocr_service(file_bytes, filename, doc_type)
+        result = call_ocr_service(
+            file_bytes,
+            filename,
+            doc_type,
+            engine=ocr_engine,
+            api_key=api_key
+        )
     except Exception as exc:
         import traceback
         print(f"[OCR UPLOAD ERROR] {type(exc).__name__}: {exc}")

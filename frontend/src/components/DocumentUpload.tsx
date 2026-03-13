@@ -23,6 +23,9 @@ export function DocumentUpload({ transactionId, onSaved }: DocumentUploadProps) 
     const [extraction, setExtraction] = useState<OcrExtractionResponse | null>(null)
     const [selectedFile, setSelectedFile] = useState<File | null>(null)
     const fileInputRef = useRef<HTMLInputElement>(null)
+    const [ocrEngine, setOcrEngine] = useState<'LOCAL' | 'API'>('LOCAL')
+    const [apiKey, setApiKey] = useState('')
+
 
     const resetState = useCallback(() => {
         setExtraction(null)
@@ -36,27 +39,15 @@ export function DocumentUpload({ transactionId, onSaved }: DocumentUploadProps) 
         resetState()
     }
 
-    const handleFile = async (file: File) => {
+    const handleFile = (file: File) => {
         if (!file.type.startsWith('image/')) {
             setError('Please upload an image file (JPEG, PNG, etc.)')
             return
         }
+
         setSelectedFile(file)
         setError(null)
         setSuccessMsg(null)
-        setUploading(true)
-        try {
-            const result = await uploadDocumentForOcr(transactionId, file, activeTab)
-            setExtraction(result)
-        } catch (err: unknown) {
-            const msg =
-                err && typeof err === 'object' && 'response' in err
-                    ? (err as { response?: { data?: { detail?: string } } }).response?.data?.detail ?? 'OCR extraction failed'
-                    : 'OCR extraction failed. Is the OCR service running?'
-            setError(String(msg))
-        } finally {
-            setUploading(false)
-        }
     }
 
     const handleDrop = (e: React.DragEvent) => {
@@ -64,6 +55,41 @@ export function DocumentUpload({ transactionId, onSaved }: DocumentUploadProps) 
         setDragOver(false)
         const file = e.dataTransfer.files[0]
         if (file) handleFile(file)
+    }
+
+    const handleConfirmUpload = async () => {
+
+        if (!selectedFile) return
+
+        setUploading(true)
+        setError(null)
+
+        try {
+
+            const result = await uploadDocumentForOcr(
+                transactionId,
+                selectedFile,
+                activeTab,
+                {
+                    engine: ocrEngine,
+                    api_key: ocrEngine === 'API' ? apiKey : undefined
+                }
+            )
+
+            setExtraction(result)
+
+        } catch (err: unknown) {
+
+            const msg =
+                err && typeof err === 'object' && 'response' in err
+                    ? (err as { response?: { data?: { detail?: string } } }).response?.data?.detail ?? 'OCR extraction failed'
+                    : 'OCR extraction failed. Is the OCR service running?'
+
+            setError(String(msg))
+
+        } finally {
+            setUploading(false)
+        }
     }
 
     const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -157,6 +183,66 @@ export function DocumentUpload({ transactionId, onSaved }: DocumentUploadProps) 
                 </div>
             )}
 
+
+            {/* OCR Engine Selection */}
+            <div style={{ marginBottom: '1rem' }}>
+                <label style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                    OCR Engine
+                </label>
+
+                <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem' }}>
+                    <button
+                        type="button"
+                        onClick={() => setOcrEngine('LOCAL')}
+                        style={{
+                            padding: '0.4rem 0.75rem',
+                            background: ocrEngine === 'LOCAL' ? '#1a1a2e' : '#f1f5f9',
+                            color: ocrEngine === 'LOCAL' ? '#fff' : '#475569',
+                            border: 'none',
+                            borderRadius: 6,
+                            cursor: 'pointer',
+                            fontSize: '0.8rem'
+                        }}
+                    >
+                        Local OCR
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => setOcrEngine('API')}
+                        style={{
+                            padding: '0.4rem 0.75rem',
+                            background: ocrEngine === 'API' ? '#1a1a2e' : '#f1f5f9',
+                            color: ocrEngine === 'API' ? '#fff' : '#475569',
+                            border: 'none',
+                            borderRadius: 6,
+                            cursor: 'pointer',
+                            fontSize: '0.8rem'
+                        }}
+                    >
+                        API OCR ⚡
+                    </button>
+                </div>
+
+                {ocrEngine === 'API' && (
+                    <input
+                        type="password"
+                        placeholder="Enter OCR API Key"
+                        value={apiKey}
+                        onChange={(e) => setApiKey(e.target.value)}
+                        style={{
+                            marginTop: '0.5rem',
+                            width: '100%',
+                            padding: '0.4rem',
+                            borderRadius: 6,
+                            border: '1px solid #e2e8f0'
+                        }}
+                    />
+                )}
+            </div>
+
+
+
             {/* Upload zone */}
             {!extraction && (
                 <div
@@ -200,9 +286,35 @@ export function DocumentUpload({ transactionId, onSaved }: DocumentUploadProps) 
                                 or click to browse • JPEG, PNG supported
                             </p>
                             {selectedFile && (
-                                <p style={{ color: '#64748b', fontSize: '0.8rem', marginTop: '0.5rem' }}>
-                                    Selected: {selectedFile.name}
-                                </p>
+                                <div style={{ marginTop: '0.75rem' }}>
+
+                                    <p style={{ color: '#64748b', fontSize: '0.8rem' }}>
+                                        Selected: {selectedFile.name}
+                                    </p>
+
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.stopPropagation()
+                                            handleConfirmUpload()
+                                        }}
+                                        disabled={uploading}
+                                        style={{
+                                            marginTop: '0.5rem',
+                                            padding: '0.45rem 0.9rem',
+                                            background: '#2563eb',
+                                            color: '#fff',
+                                            border: 'none',
+                                            borderRadius: 6,
+                                            cursor: uploading ? 'not-allowed' : 'pointer',
+                                            fontSize: '0.8rem',
+                                            fontWeight: 500
+                                        }}
+                                    >
+                                        {uploading ? "Processing..." : "Confirm Upload"}
+                                    </button>
+
+                                </div>
                             )}
                         </div>
                     )}

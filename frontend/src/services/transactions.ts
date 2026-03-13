@@ -67,18 +67,32 @@ import type { OcrExtractionResponse, OcrInvoiceData, OcrQuotationData, OcrGrnDat
 export async function uploadDocumentForOcr(
   transactionId: string,
   file: File,
-  docType: DocType
+  docType: DocType,
+  options?: {
+    engine?: 'LOCAL' | 'API'
+    api_key?: string
+  }
 ): Promise<OcrExtractionResponse> {
+
   const formData = new FormData()
   formData.append('file', file)
+
+  if (options?.engine) {
+    formData.append('ocr_engine', options.engine)
+  }
+
+  if (options?.api_key) {
+    formData.append('api_key', options.api_key)
+  }
+
   const { data } = await api.post<OcrExtractionResponse>(
     `/transactions/${transactionId}/upload/${docType}`,
     formData,
     { headers: { 'Content-Type': 'multipart/form-data' } }
   )
+
   return data
 }
-
 export async function saveOcrInvoice(
   transactionId: string,
   payload: OcrInvoiceData
